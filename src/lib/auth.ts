@@ -3,8 +3,17 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
+// Para habilitar login com Google, descomente e adicione ao .env:
+//   GOOGLE_CLIENT_ID=...
+//   GOOGLE_CLIENT_SECRET=...
+// import GoogleProvider from "next-auth/providers/google";
+
 export const authOptions: NextAuthOptions = {
   providers: [
+    // GoogleProvider({
+    //   clientId: process.env.GOOGLE_CLIENT_ID!,
+    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    // }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -30,6 +39,7 @@ export const authOptions: NextAuthOptions = {
           id: usuario.id,
           email: usuario.email,
           name: usuario.nome,
+          papel: usuario.papel,
         };
       },
     }),
@@ -37,13 +47,16 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   callbacks: {
     jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        token.papel = (user as { papel?: string }).papel ?? "VISUALIZADOR";
+      }
       return token;
     },
     session({ session, token }) {
-      if (session.user && token.id) {
-        (session.user as { id: string } & typeof session.user).id =
-          token.id as string;
+      if (session.user) {
+        (session.user as { id: string; papel: string } & typeof session.user).id = token.id as string;
+        (session.user as { id: string; papel: string } & typeof session.user).papel = token.papel as string;
       }
       return session;
     },

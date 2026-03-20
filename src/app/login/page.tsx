@@ -35,8 +35,13 @@ export default function LoginPage() {
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">⛪</div>
-          <h1 className="text-2xl font-bold text-gray-800">Igreja Sistema</h1>
-          <p className="text-gray-500 text-sm mt-1">Gestão de Recursos</p>
+          <h1 className="text-xl font-bold text-gray-800 leading-tight">
+            Sistema Patrimônio e Suprimentos
+          </h1>
+          <p className="text-gray-600 text-sm mt-1 font-medium">
+            Santuário Nossa Senhora da Aparecida
+          </p>
+          <p className="text-gray-400 text-xs mt-0.5">Diálogo Conjugal</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +60,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="admin@igreja.com"
+              placeholder="seu@email.com"
             />
           </div>
           <div>

@@ -4,6 +4,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      papel: string;
       name?: string | null;
       email?: string | null;
     };
@@ -11,6 +12,15 @@ declare module "next-auth" {
 }
 
 // ─── API response types ────────────────────────────────────────────────────────
+
+export interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
+  papel: "ADMINISTRADOR" | "OPERADOR" | "VISUALIZADOR";
+  ativo: boolean;
+  criadoEm: string;
+}
 
 export interface Categoria {
   id: string;

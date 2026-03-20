@@ -11,11 +11,13 @@ datasource db {
 // TipoMovimentacao: ENTRADA | SAIDA
 // StatusPatrimonio: ATIVO | INATIVO | EM_MANUTENCAO | DESCARTADO
 
+// papel: ADMINISTRADOR | OPERADOR | VISUALIZADOR
 model Usuario {
   id       String  @id @default(cuid())
   nome     String
   email    String  @unique
   senha    String
+  papel    String  @default("VISUALIZADOR") // ADMINISTRADOR | OPERADOR | VISUALIZADOR
   ativo    Boolean @default(true)
   criadoEm DateTime @default(now()) @map("criado_em")
 

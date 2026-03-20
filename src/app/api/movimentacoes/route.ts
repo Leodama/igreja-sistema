@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthToken, getUserId } from "@/lib/session";
+import { checkRole, getAuthToken, getUserId } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   if (!await getAuthToken(req)) {
@@ -41,10 +41,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const token = await getAuthToken(req);
-  if (!token) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
+  const err = await checkRole(req, "OPERADOR");
+  if (err) return err;
 
   const usuarioId = await getUserId(req);
   if (!usuarioId) {

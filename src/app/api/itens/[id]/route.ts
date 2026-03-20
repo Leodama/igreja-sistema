@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthToken } from "@/lib/session";
+import { checkRole } from "@/lib/session";
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!await getAuthToken(req)) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
+  const err = await checkRole(req, "OPERADOR");
+  if (err) return err;
 
   const body = await req.json();
   const { nome, descricao, unidade, quantidadeMinima, categoriaId, localizacaoId } = body;
@@ -33,9 +32,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!await getAuthToken(req)) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
+  const err = await checkRole(req, "ADMINISTRADOR");
+  if (err) return err;
 
   await prisma.item.update({
     where: { id: params.id },

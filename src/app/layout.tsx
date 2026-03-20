@@ -6,8 +6,8 @@ import { SessionProvider } from "@/components/auth/SessionProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Igreja Sistema",
-  description: "Controle de mantimentos e patrimônio",
+  title: "Sistema Patrimônio e Suprimentos",
+  description: "Santuário Nossa Senhora da Aparecida — Diálogo Conjugal",
 };
 
 export default function RootLayout({
