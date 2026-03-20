@@ -43,6 +43,11 @@ export interface Item {
   quantidade: number;
   quantidadeMinima: number;
   ativo: boolean;
+  origem?: string | null;
+  nomeDoador?: string | null;
+  valorCompra?: number | null;
+  fornecedor?: string | null;
+  numeroNfe?: string | null;
   categoriaId: string | null;
   localizacaoId: string | null;
   categoria: Categoria | null;
@@ -55,6 +60,8 @@ export interface Movimentacao {
   tipo: "ENTRADA" | "SAIDA";
   quantidade: number;
   observacao?: string | null;
+  destinatario?: string | null;
+  dataMovimentacao?: string | null;
   criadoEm: string;
   item: { id: string; nome: string; unidade: string };
   usuario: { id: string; nome: string };

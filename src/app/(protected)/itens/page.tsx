@@ -6,6 +6,11 @@ import { fetchJson } from "@/lib/utils";
 
 const UNIDADES = ["kg", "g", "un", "litro", "ml", "cx", "pct", "dz", "par"];
 
+const ORIGEM_COLORS: Record<string, string> = {
+  DOACAO: "bg-green-100 text-green-700",
+  COMPRA: "bg-blue-100 text-blue-700",
+};
+
 const formVazio = {
   nome: "",
   descricao: "",
@@ -14,6 +19,11 @@ const formVazio = {
   quantidadeMinima: 0,
   categoriaId: "",
   localizacaoId: "",
+  origem: "",
+  nomeDoador: "",
+  valorCompra: "",
+  fornecedor: "",
+  numeroNfe: "",
 };
 
 export default function ItensPage() {
@@ -58,6 +68,11 @@ export default function ItensPage() {
       quantidadeMinima: item.quantidadeMinima,
       categoriaId: item.categoriaId || "",
       localizacaoId: item.localizacaoId || "",
+      origem: item.origem || "",
+      nomeDoador: item.nomeDoador || "",
+      valorCompra: item.valorCompra ? String(item.valorCompra) : "",
+      fornecedor: item.fornecedor || "",
+      numeroNfe: item.numeroNfe || "",
     });
     setModalAberto(true);
   }
@@ -72,7 +87,10 @@ export default function ItensPage() {
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        valorCompra: form.valorCompra ? Number(form.valorCompra) : null,
+      }),
     });
 
     setCarregando(false);
@@ -148,6 +166,7 @@ export default function ItensPage() {
                 <th className="px-4 py-3">Quantidade</th>
                 <th className="px-4 py-3">Mínimo</th>
                 <th className="px-4 py-3">Localização</th>
+                <th className="px-4 py-3">Origem</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Ações</th>
               </tr>
@@ -182,6 +201,23 @@ export default function ItensPage() {
                     <td className="px-4 py-3 text-sm text-gray-500">
                       {item.localizacao?.nome || "-"}
                     </td>
+                    <td className="px-4 py-3 text-sm">
+                      {item.origem ? (
+                        <div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ORIGEM_COLORS[item.origem] ?? "bg-gray-100 text-gray-600"}`}>
+                            {item.origem === "DOACAO" ? "Doação" : "Compra"}
+                          </span>
+                          {item.origem === "DOACAO" && item.nomeDoador && (
+                            <p className="text-xs text-gray-400 mt-0.5">{item.nomeDoador}</p>
+                          )}
+                          {item.origem === "COMPRA" && item.fornecedor && (
+                            <p className="text-xs text-gray-400 mt-0.5">{item.fornecedor}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       {baixo ? (
                         <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-medium">
@@ -213,7 +249,7 @@ export default function ItensPage() {
               {itensFiltrados.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-gray-400 text-sm"
                   >
                     Nenhum item encontrado
@@ -227,8 +263,8 @@ export default function ItensPage() {
 
       {modalAberto && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white">
               <h2 className="text-lg font-semibold text-gray-800">
                 {editando ? "Editar Item" : "Novo Item"}
               </h2>
@@ -336,7 +372,7 @@ export default function ItensPage() {
                       })
                     }
                     min={0}
-                    step={0.001}
+                    step={1}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
@@ -352,12 +388,86 @@ export default function ItensPage() {
                         setForm({ ...form, quantidade: Number(e.target.value) })
                       }
                       min={0}
-                      step={0.001}
+                      step={1}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 )}
               </div>
+
+              {/* Origem */}
+              <div className="border-t border-gray-100 pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Origem do Item
+                </label>
+                <select
+                  value={form.origem}
+                  onChange={(e) =>
+                    setForm({ ...form, origem: e.target.value, nomeDoador: "", valorCompra: "", fornecedor: "", numeroNfe: "" })
+                  }
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Não informado</option>
+                  <option value="DOACAO">Doação</option>
+                  <option value="COMPRA">Compra</option>
+                </select>
+
+                {form.origem === "DOACAO" && (
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome do Doador
+                    </label>
+                    <input
+                      value={form.nomeDoador}
+                      onChange={(e) => setForm({ ...form, nomeDoador: e.target.value })}
+                      placeholder="Ex: João da Silva"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                )}
+
+                {form.origem === "COMPRA" && (
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Valor (R$)
+                      </label>
+                      <input
+                        type="number"
+                        value={form.valorCompra}
+                        onChange={(e) => setForm({ ...form, valorCompra: e.target.value })}
+                        min={0}
+                        step={0.01}
+                        placeholder="0,00"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nº NFe
+                      </label>
+                      <input
+                        value={form.numeroNfe}
+                        onChange={(e) => setForm({ ...form, numeroNfe: e.target.value })}
+                        placeholder="Ex: 000123"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Fornecedor
+                      </label>
+                      <input
+                        value={form.fornecedor}
+                        onChange={(e) => setForm({ ...form, fornecedor: e.target.value })}
+                        placeholder="Nome do fornecedor"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"

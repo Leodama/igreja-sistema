@@ -150,9 +150,10 @@ export default function HistoricoPage() {
                 <th className="px-4 py-3">Item</th>
                 <th className="px-4 py-3">Tipo</th>
                 <th className="px-4 py-3">Quantidade</th>
+                <th className="px-4 py-3">Entregue/Recebido</th>
                 <th className="px-4 py-3">Observação</th>
                 <th className="px-4 py-3">Registrado por</th>
-                <th className="px-4 py-3">Data/Hora</th>
+                <th className="px-4 py-3">Data</th>
               </tr>
             </thead>
             <tbody>
@@ -179,20 +180,23 @@ export default function HistoricoPage() {
                     {m.quantidade} {m.item.unidade}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">
+                    {m.destinatario || "-"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-500">
                     {m.observacao || "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">
                     {m.usuario.nome}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-400">
-                    {formatDateTime(m.criadoEm)}
+                    {formatDateTime(m.dataMovimentacao || m.criadoEm)}
                   </td>
                 </tr>
               ))}
               {movimentacoes.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-10 text-center text-gray-400 text-sm"
                   >
                     Nenhuma movimentação encontrada

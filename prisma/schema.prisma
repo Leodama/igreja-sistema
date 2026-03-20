@@ -59,6 +59,12 @@ model Item {
   quantidade       Float    @default(0)
   quantidadeMinima Float    @default(0) @map("quantidade_minima")
   ativo            Boolean  @default(true)
+  // origem: DOACAO | COMPRA | null
+  origem           String?
+  nomeDoador       String?  @map("nome_doador")
+  valorCompra      Float?   @map("valor_compra")
+  fornecedor       String?
+  numeroNfe        String?  @map("numero_nfe")
   criadoEm        DateTime @default(now()) @map("criado_em")
   atualizadoEm    DateTime @updatedAt @map("atualizado_em")
 
@@ -75,11 +81,13 @@ model Item {
 }
 
 model Movimentacao {
-  id         String   @id @default(cuid())
-  tipo       String   // ENTRADA | SAIDA
-  quantidade Float
-  observacao String?
-  criadoEm  DateTime @default(now()) @map("criado_em")
+  id               String    @id @default(cuid())
+  tipo             String    // ENTRADA | SAIDA
+  quantidade       Float
+  observacao       String?
+  destinatario     String?
+  dataMovimentacao DateTime? @map("data_movimentacao")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
 
   itemId    String @map("item_id")
   usuarioId String @map("usuario_id")

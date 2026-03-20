@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { itemId, tipo, quantidade, observacao } = body;
+  const { itemId, tipo, quantidade, observacao, destinatario, dataMovimentacao } = body;
   const qtd = Number(quantidade);
 
   if (!itemId || !tipo || !qtd || qtd <= 0) {
@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
         tipo,
         quantidade: qtd,
         observacao: observacao || null,
+        destinatario: destinatario || null,
+        dataMovimentacao: dataMovimentacao ? new Date(dataMovimentacao) : null,
         usuarioId,
       },
       include: {

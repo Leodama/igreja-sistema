@@ -9,6 +9,8 @@ const formVazio = {
   tipo: "ENTRADA" as "ENTRADA" | "SAIDA",
   quantidade: 1,
   observacao: "",
+  destinatario: "",
+  dataMovimentacao: new Date().toISOString().split("T")[0],
 };
 
 export default function EstoquePage() {
@@ -157,6 +159,7 @@ export default function EstoquePage() {
                   <th className="px-4 py-2">Item</th>
                   <th className="px-4 py-2">Tipo</th>
                   <th className="px-4 py-2">Qtd</th>
+                  <th className="px-4 py-2">Entregue/Recebido</th>
                   <th className="px-4 py-2">Data</th>
                 </tr>
               </thead>
@@ -180,8 +183,11 @@ export default function EstoquePage() {
                     <td className="px-4 py-2.5 text-sm text-gray-600">
                       {m.quantidade} {m.item.unidade}
                     </td>
+                    <td className="px-4 py-2.5 text-sm text-gray-500">
+                      {m.destinatario || "-"}
+                    </td>
                     <td className="px-4 py-2.5 text-xs text-gray-400">
-                      {formatDate(m.criadoEm)}
+                      {formatDate(m.dataMovimentacao || m.criadoEm)}
                     </td>
                   </tr>
                 ))}
@@ -200,6 +206,7 @@ export default function EstoquePage() {
           </div>
         </div>
       </div>
+
 
       {modalAberto && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -276,23 +283,51 @@ export default function EstoquePage() {
                     setForm({ ...form, quantidade: Number(e.target.value) })
                   }
                   required
-                  min={0.001}
-                  step={0.001}
+                  min={1}
+                  step={1}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Observação
-                </label>
-                <input
-                  value={form.observacao}
-                  onChange={(e) =>
-                    setForm({ ...form, observacao: e.target.value })
-                  }
-                  placeholder="Ex: Doação recebida, uso no culto..."
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {form.tipo === "SAIDA" ? "Entregue para" : "Recebido de"}
+                  </label>
+                  <input
+                    value={form.destinatario}
+                    onChange={(e) =>
+                      setForm({ ...form, destinatario: e.target.value })
+                    }
+                    placeholder={form.tipo === "SAIDA" ? "Nome de quem recebeu..." : "Nome de quem entregou..."}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Data da Movimentação
+                  </label>
+                  <input
+                    type="date"
+                    value={form.dataMovimentacao}
+                    onChange={(e) =>
+                      setForm({ ...form, dataMovimentacao: e.target.value })
+                    }
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Observação
+                  </label>
+                  <input
+                    value={form.observacao}
+                    onChange={(e) =>
+                      setForm({ ...form, observacao: e.target.value })
+                    }
+                    placeholder="Ex: uso no culto..."
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button
