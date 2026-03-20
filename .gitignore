@@ -12,6 +12,8 @@ out/
 
 # Prisma
 prisma/migrations/
+prisma/*.db
+prisma/*.db-journal
 
 # Logs
 *.log
