@@ -82,7 +82,7 @@ export default function PatrimonioPage() {
       : "/api/patrimonio";
     const method = editando ? "PUT" : "POST";
 
-    await fetch(url, {
+    const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -93,8 +93,15 @@ export default function PatrimonioPage() {
       }),
     });
 
-    setModalAberto(false);
     setCarregando(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || `Erro ao salvar (${res.status})`);
+      return;
+    }
+
+    setModalAberto(false);
     carregarDados();
   }
 
