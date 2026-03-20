@@ -11,6 +11,20 @@ const ORIGEM_COLORS: Record<string, string> = {
   COMPRA: "bg-blue-100 text-blue-700",
 };
 
+const STATUS_COLORS: Record<string, string> = {
+  ATIVO: "bg-green-100 text-green-700",
+  INATIVO: "bg-gray-100 text-gray-500",
+  EM_MANUTENCAO: "bg-yellow-100 text-yellow-700",
+  DESCARTADO: "bg-red-100 text-red-600",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ATIVO: "Ativo",
+  INATIVO: "Inativo",
+  EM_MANUTENCAO: "Em Manutenção",
+  DESCARTADO: "Descartado",
+};
+
 const formVazio = {
   nome: "",
   descricao: "",
@@ -19,6 +33,10 @@ const formVazio = {
   quantidadeMinima: 0,
   categoriaId: "",
   localizacaoId: "",
+  status: "ATIVO",
+  numeroSerie: "",
+  valorAquisicao: "",
+  dataAquisicao: "",
   origem: "",
   nomeDoador: "",
   valorCompra: "",
@@ -68,6 +86,10 @@ export default function ItensPage() {
       quantidadeMinima: item.quantidadeMinima,
       categoriaId: item.categoriaId || "",
       localizacaoId: item.localizacaoId || "",
+      status: item.status || "ATIVO",
+      numeroSerie: item.numeroSerie || "",
+      valorAquisicao: item.valorAquisicao ? String(item.valorAquisicao) : "",
+      dataAquisicao: item.dataAquisicao ? item.dataAquisicao.split("T")[0] : "",
       origem: item.origem || "",
       nomeDoador: item.nomeDoador || "",
       valorCompra: item.valorCompra ? String(item.valorCompra) : "",
@@ -90,6 +112,7 @@ export default function ItensPage() {
       body: JSON.stringify({
         ...form,
         valorCompra: form.valorCompra ? Number(form.valorCompra) : null,
+        valorAquisicao: form.valorAquisicao ? Number(form.valorAquisicao) : null,
       }),
     });
 
@@ -125,7 +148,7 @@ export default function ItensPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Itens</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Mantimentos e utensílios cadastrados
+            Mantimentos, utensílios e patrimônios
           </p>
         </div>
         <button
@@ -164,7 +187,7 @@ export default function ItensPage() {
                 <th className="px-4 py-3">Nome</th>
                 <th className="px-4 py-3">Categoria</th>
                 <th className="px-4 py-3">Quantidade</th>
-                <th className="px-4 py-3">Mínimo</th>
+                <th className="px-4 py-3">Disponível</th>
                 <th className="px-4 py-3">Localização</th>
                 <th className="px-4 py-3">Origem</th>
                 <th className="px-4 py-3">Status</th>
@@ -173,7 +196,10 @@ export default function ItensPage() {
             </thead>
             <tbody>
               {itensFiltrados.map((item) => {
-                const baixo = item.quantidade <= item.quantidadeMinima;
+                const baixo = item.quantidadeMinima > 0 && item.quantidade < item.quantidadeMinima;
+                const temEmprestimos =
+                  item.quantidadeDisponivel !== undefined &&
+                  item.quantidadeDisponivel < item.quantidade;
                 return (
                   <tr
                     key={item.id}
@@ -186,6 +212,11 @@ export default function ItensPage() {
                           {item.descricao}
                         </p>
                       )}
+                      {item.numeroSerie && (
+                        <p className="text-xs text-gray-400 font-normal">
+                          S/N: {item.numeroSerie}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {item.categoria?.nome || "-"}
@@ -194,9 +225,18 @@ export default function ItensPage() {
                       <span className={baixo ? "text-red-600 font-semibold" : "text-gray-700"}>
                         {item.quantidade} {item.unidade}
                       </span>
+                      {baixo && (
+                        <p className="text-xs text-red-400">mín: {item.quantidadeMinima}</p>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
-                      {item.quantidadeMinima} {item.unidade}
+                    <td className="px-4 py-3 text-sm">
+                      {temEmprestimos ? (
+                        <span className="text-purple-700 font-semibold">
+                          {item.quantidadeDisponivel} {item.unidade}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       {item.localizacao?.nome || "-"}
@@ -219,15 +259,9 @@ export default function ItensPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {baixo ? (
-                        <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                          Baixo estoque
-                        </span>
-                      ) : (
-                        <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                          OK
-                        </span>
-                      )}
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[item.status] ?? "bg-gray-100 text-gray-500"}`}>
+                        {STATUS_LABELS[item.status] ?? item.status}
+                      </span>
                     </td>
                     <td className="px-4 py-3 flex gap-3">
                       <button
@@ -294,9 +328,7 @@ export default function ItensPage() {
                   </label>
                   <input
                     value={form.descricao}
-                    onChange={(e) =>
-                      setForm({ ...form, descricao: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, descricao: e.target.value })}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
@@ -306,9 +338,7 @@ export default function ItensPage() {
                   </label>
                   <select
                     value={form.categoriaId}
-                    onChange={(e) =>
-                      setForm({ ...form, categoriaId: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}
                     required
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
@@ -326,9 +356,7 @@ export default function ItensPage() {
                   </label>
                   <select
                     value={form.localizacaoId}
-                    onChange={(e) =>
-                      setForm({ ...form, localizacaoId: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, localizacaoId: e.target.value })}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">Nenhuma</option>
@@ -345,9 +373,7 @@ export default function ItensPage() {
                   </label>
                   <select
                     value={form.unidade}
-                    onChange={(e) =>
-                      setForm({ ...form, unidade: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, unidade: e.target.value })}
                     required
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
@@ -365,12 +391,7 @@ export default function ItensPage() {
                   <input
                     type="number"
                     value={form.quantidadeMinima}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        quantidadeMinima: Number(e.target.value),
-                      })
-                    }
+                    onChange={(e) => setForm({ ...form, quantidadeMinima: Number(e.target.value) })}
                     min={0}
                     step={1}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -384,15 +405,75 @@ export default function ItensPage() {
                     <input
                       type="number"
                       value={form.quantidade}
-                      onChange={(e) =>
-                        setForm({ ...form, quantidade: Number(e.target.value) })
-                      }
+                      onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })}
                       min={0}
                       step={1}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 )}
+              </div>
+
+              {/* Status */}
+              <div className="border-t border-gray-100 pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status do Item
+                </label>
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="ATIVO">Ativo</option>
+                  <option value="INATIVO">Inativo</option>
+                  <option value="EM_MANUTENCAO">Em Manutenção</option>
+                  <option value="DESCARTADO">Descartado</option>
+                </select>
+              </div>
+
+              {/* Asset fields */}
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                  Dados do Patrimônio (opcional)
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Número de Série
+                    </label>
+                    <input
+                      value={form.numeroSerie}
+                      onChange={(e) => setForm({ ...form, numeroSerie: e.target.value })}
+                      placeholder="Ex: SN-2024-001"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Valor de Aquisição (R$)
+                    </label>
+                    <input
+                      type="number"
+                      value={form.valorAquisicao}
+                      onChange={(e) => setForm({ ...form, valorAquisicao: e.target.value })}
+                      min={0}
+                      step={0.01}
+                      placeholder="0,00"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Data de Aquisição
+                    </label>
+                    <input
+                      type="date"
+                      value={form.dataAquisicao}
+                      onChange={(e) => setForm({ ...form, dataAquisicao: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Origem */}

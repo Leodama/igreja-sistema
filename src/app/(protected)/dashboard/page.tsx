@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, Building2, Heart, AlertTriangle } from "lucide-react";
+import { Package, AlertTriangle, HandshakeIcon, Clock } from "lucide-react";
 import type { DashboardStats } from "@/types";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -16,15 +16,12 @@ export default function DashboardPage() {
         return r.json();
       })
       .then((data: DashboardStats) => {
-        // Garantir que arrays sempre existam mesmo que a API retorne incompleto
         setStats({
           totalItens: data.totalItens ?? 0,
-          totalPatrimonios: data.totalPatrimonios ?? 0,
-          totalDoacoes: data.totalDoacoes ?? 0,
-          doacoesMes: data.doacoesMes ?? 0,
+          emprestimosEmUso: data.emprestimosEmUso ?? 0,
+          emprestimosEmAtraso: data.emprestimosEmAtraso ?? 0,
           itensBaixoEstoque: data.itensBaixoEstoque ?? [],
           ultimasMovimentacoes: data.ultimasMovimentacoes ?? [],
-          valorTotalPatrimonios: data.valorTotalPatrimonios ?? 0,
         });
       })
       .catch((e) => setErro(e.message));
@@ -63,16 +60,16 @@ export default function DashboardPage() {
       color: "bg-blue-50 text-blue-600",
     },
     {
-      label: "Patrimônios",
-      value: stats.totalPatrimonios,
-      icon: Building2,
+      label: "Empréstimos Ativos",
+      value: stats.emprestimosEmUso,
+      icon: HandshakeIcon,
       color: "bg-purple-50 text-purple-600",
     },
     {
-      label: "Doações este mês",
-      value: stats.doacoesMes,
-      icon: Heart,
-      color: "bg-pink-50 text-pink-600",
+      label: "Em Atraso",
+      value: stats.emprestimosEmAtraso,
+      icon: Clock,
+      color: stats.emprestimosEmAtraso > 0 ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-400",
     },
     {
       label: "Baixo Estoque",
@@ -190,17 +187,6 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-
-      {stats.valorTotalPatrimonios > 0 && (
-        <div className="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <p className="text-sm text-gray-500">
-            Valor total de patrimônios ativos:{" "}
-            <span className="font-semibold text-gray-800">
-              {formatCurrency(stats.valorTotalPatrimonios)}
-            </span>
-          </p>
-        </div>
-      )}
     </div>
   );
 }

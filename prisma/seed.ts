@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   const senhaHash = await bcrypt.hash("admin123", 10);
 
-  const admin = await prisma.usuario.upsert({
+  await prisma.usuario.upsert({
     where: { email: "admin@igreja.com" },
     update: { papel: "ADMINISTRADOR" },
     create: {
@@ -73,10 +73,11 @@ async function main() {
     }),
   ]);
 
-  // Sample items
   const catAlimentos = categorias[0];
   const catLimpeza = categorias[1];
+  const catEletronicos = categorias[3];
   const locAlmox = localizacoes[0];
+  const locSalao = localizacoes[2];
 
   await prisma.item.upsert({
     where: { id: "seed-item-1" },
@@ -122,19 +123,21 @@ async function main() {
     },
   });
 
-  // Sample patrimony
-  const locSalao = localizacoes[2];
-  await prisma.patrimonio.upsert({
-    where: { id: "seed-pat-1" },
+  await prisma.item.upsert({
+    where: { id: "seed-item-4" },
     update: {},
     create: {
-      id: "seed-pat-1",
+      id: "seed-item-4",
       nome: "Projetor Epson",
       descricao: "Projetor para apresentações",
+      unidade: "un",
+      quantidade: 1,
+      quantidadeMinima: 0,
+      status: "ATIVO",
       numeroSerie: "EPS-2024-001",
       valorAquisicao: 2500,
       dataAquisicao: new Date("2024-01-15"),
-      status: "ATIVO",
+      categoriaId: catEletronicos.id,
       localizacaoId: locSalao.id,
     },
   });

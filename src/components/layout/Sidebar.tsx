@@ -7,9 +7,8 @@ import {
   LayoutDashboard,
   Package,
   ArrowLeftRight,
-  Building2,
+  HandshakeIcon,
   MapPin,
-  Heart,
   History,
   Users,
   LogOut,
@@ -19,9 +18,8 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/itens", label: "Itens", icon: Package },
   { href: "/estoque", label: "Estoque", icon: ArrowLeftRight },
-  { href: "/patrimonio", label: "Patrimônio", icon: Building2 },
+  { href: "/emprestimos", label: "Empréstimos", icon: HandshakeIcon },
   { href: "/localizacoes", label: "Localizações", icon: MapPin },
-  { href: "/doacoes", label: "Doações", icon: Heart },
   { href: "/historico", label: "Histórico", icon: History },
 ];
 

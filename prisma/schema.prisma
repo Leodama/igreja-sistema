@@ -7,30 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// TipoItem:        MANTIMENTO | UTENSILIO | OUTRO
-// TipoMovimentacao: ENTRADA | SAIDA
-// StatusPatrimonio: ATIVO | INATIVO | EM_MANUTENCAO | DESCARTADO
-
 // papel: ADMINISTRADOR | OPERADOR | VISUALIZADOR
 model Usuario {
-  id       String  @id @default(cuid())
-  nome     String
-  email    String  @unique
-  senha    String
-  papel    String  @default("VISUALIZADOR") // ADMINISTRADOR | OPERADOR | VISUALIZADOR
-  ativo    Boolean @default(true)
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  papel     String   @default("VISUALIZADOR") // ADMINISTRADOR | OPERADOR | VISUALIZADOR
+  ativo     Boolean  @default(true)
   criadoEm DateTime @default(now()) @map("criado_em")
 
   movimentacoes Movimentacao[]
-  doacoes       Doacao[]
+  emprestimos   Emprestimo[]
 
   @@map("usuarios")
 }
 
 model Categoria {
-  id       String   @id @default(cuid())
-  nome     String   @unique
-  tipo     String   // MANTIMENTO | UTENSILIO | OUTRO
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  tipo      String   // MANTIMENTO | UTENSILIO | OUTRO
   criadoEm DateTime @default(now()) @map("criado_em")
 
   itens Item[]
@@ -43,30 +39,33 @@ model Localizacao {
   nome      String   @unique
   descricao String?
   ativo     Boolean  @default(true)
-  criadoEm  DateTime @default(now()) @map("criado_em")
+  criadoEm DateTime @default(now()) @map("criado_em")
 
-  itens       Item[]
-  patrimonios Patrimonio[]
+  itens Item[]
 
   @@map("localizacoes")
 }
 
 model Item {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   nome             String
   descricao        String?
   unidade          String
-  quantidade       Float    @default(0)
-  quantidadeMinima Float    @default(0) @map("quantidade_minima")
-  ativo            Boolean  @default(true)
+  quantidade       Float     @default(0)
+  quantidadeMinima Float     @default(0) @map("quantidade_minima")
+  ativo            Boolean   @default(true)
+  status           String    @default("ATIVO") // ATIVO | INATIVO | EM_MANUTENCAO | DESCARTADO
+  numeroSerie      String?   @map("numero_serie")
+  valorAquisicao   Float?    @map("valor_aquisicao")
+  dataAquisicao    DateTime? @map("data_aquisicao")
   // origem: DOACAO | COMPRA | null
   origem           String?
-  nomeDoador       String?  @map("nome_doador")
-  valorCompra      Float?   @map("valor_compra")
+  nomeDoador       String?   @map("nome_doador")
+  valorCompra      Float?    @map("valor_compra")
   fornecedor       String?
-  numeroNfe        String?  @map("numero_nfe")
-  criadoEm        DateTime @default(now()) @map("criado_em")
-  atualizadoEm    DateTime @updatedAt @map("atualizado_em")
+  numeroNfe        String?   @map("numero_nfe")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @updatedAt @map("atualizado_em")
 
   categoriaId   String? @map("categoria_id")
   localizacaoId String? @map("localizacao_id")
@@ -74,6 +73,7 @@ model Item {
   categoria    Categoria?   @relation(fields: [categoriaId], references: [id])
   localizacao  Localizacao? @relation(fields: [localizacaoId], references: [id])
   movimentacoes Movimentacao[]
+  emprestimos   Emprestimo[]
 
   @@index([categoriaId])
   @@index([localizacaoId])
@@ -100,41 +100,25 @@ model Movimentacao {
   @@map("movimentacoes")
 }
 
-model Patrimonio {
-  id             String    @id @default(cuid())
-  nome           String
-  descricao      String?
-  numeroSerie    String?   @map("numero_serie")
-  valorAquisicao Float?    @map("valor_aquisicao")
-  dataAquisicao  DateTime? @map("data_aquisicao")
-  status         String    @default("ATIVO") // ATIVO | INATIVO | EM_MANUTENCAO | DESCARTADO
-  criadoEm      DateTime  @default(now()) @map("criado_em")
-  atualizadoEm  DateTime  @updatedAt @map("atualizado_em")
+model Emprestimo {
+  id                  String    @id @default(cuid())
+  quantidade          Float     @default(1)
+  evento              String?
+  responsavel         String
+  observacao          String?
+  dataSaida           DateTime  @default(now()) @map("data_saida")
+  dataRetornoPrevisto DateTime? @map("data_retorno_previsto")
+  dataRetorno         DateTime? @map("data_retorno")
+  status              String    @default("EM_USO") // EM_USO | RETORNADO
+  criadoEm           DateTime  @default(now()) @map("criado_em")
 
-  localizacaoId String? @map("localizacao_id")
+  itemId    String @map("item_id")
+  usuarioId String @map("usuario_id")
 
-  localizacao Localizacao? @relation(fields: [localizacaoId], references: [id])
+  item    Item    @relation(fields: [itemId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 
+  @@index([itemId])
   @@index([status])
-  @@map("patrimonios")
-}
-
-model Doacao {
-  id            String   @id @default(cuid())
-  doador        String?
-  contato       String?
-  descricao     String
-  quantidade    Float?
-  unidade       String?
-  valorEstimado Float?   @map("valor_estimado")
-  dataDoacao    DateTime @default(now()) @map("data_doacao")
-  observacoes   String?
-  criadoEm     DateTime @default(now()) @map("criado_em")
-
-  usuarioId String? @map("usuario_id")
-
-  usuario Usuario? @relation(fields: [usuarioId], references: [id])
-
-  @@index([dataDoacao])
-  @@map("doacoes")
+  @@map("emprestimos")
 }

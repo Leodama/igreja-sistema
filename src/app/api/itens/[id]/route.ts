@@ -10,7 +10,11 @@ export async function PUT(
   if (err) return err;
 
   const body = await req.json();
-  const { nome, descricao, unidade, quantidadeMinima, categoriaId, localizacaoId, origem, nomeDoador, valorCompra, fornecedor, numeroNfe } = body;
+  const {
+    nome, descricao, unidade, quantidadeMinima, categoriaId, localizacaoId,
+    status, numeroSerie, valorAquisicao, dataAquisicao,
+    origem, nomeDoador, valorCompra, fornecedor, numeroNfe,
+  } = body;
 
   const item = await prisma.item.update({
     where: { id: params.id },
@@ -21,6 +25,10 @@ export async function PUT(
       quantidadeMinima: Number(quantidadeMinima) || 0,
       categoriaId: categoriaId || null,
       localizacaoId: localizacaoId || null,
+      status: status || "ATIVO",
+      numeroSerie: numeroSerie || null,
+      valorAquisicao: valorAquisicao ? Number(valorAquisicao) : null,
+      dataAquisicao: dataAquisicao ? new Date(dataAquisicao) : null,
       origem: origem || null,
       nomeDoador: origem === "DOACAO" ? (nomeDoador || null) : null,
       valorCompra: origem === "COMPRA" && valorCompra ? Number(valorCompra) : null,

@@ -42,7 +42,12 @@ export interface Item {
   unidade: string;
   quantidade: number;
   quantidadeMinima: number;
+  quantidadeDisponivel?: number; // quantidade - emprestimos ativos (computed)
   ativo: boolean;
+  status: "ATIVO" | "INATIVO" | "EM_MANUTENCAO" | "DESCARTADO";
+  numeroSerie?: string | null;
+  valorAquisicao?: number | null;
+  dataAquisicao?: string | null;
   origem?: string | null;
   nomeDoador?: string | null;
   valorCompra?: number | null;
@@ -67,39 +72,25 @@ export interface Movimentacao {
   usuario: { id: string; nome: string };
 }
 
-export interface Patrimonio {
+export interface Emprestimo {
   id: string;
-  nome: string;
-  descricao?: string | null;
-  numeroSerie?: string | null;
-  valorAquisicao?: number | null;
-  dataAquisicao?: string | null;
-  status: "ATIVO" | "INATIVO" | "EM_MANUTENCAO" | "DESCARTADO";
-  localizacaoId: string | null;
-  localizacao: Localizacao | null;
+  quantidade: number;
+  evento?: string | null;
+  responsavel: string;
+  observacao?: string | null;
+  dataSaida: string;
+  dataRetornoPrevisto?: string | null;
+  dataRetorno?: string | null;
+  status: "EM_USO" | "RETORNADO";
   criadoEm: string;
-}
-
-export interface Doacao {
-  id: string;
-  doador?: string | null;
-  contato?: string | null;
-  descricao: string;
-  quantidade?: number | null;
-  unidade?: string | null;
-  valorEstimado?: number | null;
-  dataDoacao: string;
-  observacoes?: string | null;
-  usuario?: { nome: string } | null;
-  criadoEm: string;
+  item: { id: string; nome: string; unidade: string };
+  usuario: { id: string; nome: string };
 }
 
 export interface DashboardStats {
   totalItens: number;
-  totalPatrimonios: number;
-  totalDoacoes: number;
+  emprestimosEmUso: number;
+  emprestimosEmAtraso: number;
   itensBaixoEstoque: Item[];
   ultimasMovimentacoes: Movimentacao[];
-  doacoesMes: number;
-  valorTotalPatrimonios: number;
 }

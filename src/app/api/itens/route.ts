@@ -13,7 +13,23 @@ export async function GET(req: NextRequest) {
     orderBy: { nome: "asc" },
   });
 
-  return NextResponse.json(itens);
+  // Compute quantidadeDisponivel (quantidade - empréstimos ativos)
+  const emprestimosAtivos = await prisma.emprestimo.groupBy({
+    by: ["itemId"],
+    where: { status: "EM_USO" },
+    _sum: { quantidade: true },
+  });
+
+  const emUsoMap = new Map(
+    emprestimosAtivos.map((e) => [e.itemId, e._sum.quantidade ?? 0])
+  );
+
+  const itensComDisponivel = itens.map((item) => ({
+    ...item,
+    quantidadeDisponivel: item.quantidade - (emUsoMap.get(item.id) ?? 0),
+  }));
+
+  return NextResponse.json(itensComDisponivel);
 }
 
 export async function POST(req: NextRequest) {
@@ -29,6 +45,10 @@ export async function POST(req: NextRequest) {
     quantidadeMinima,
     categoriaId,
     localizacaoId,
+    status,
+    numeroSerie,
+    valorAquisicao,
+    dataAquisicao,
     origem,
     nomeDoador,
     valorCompra,
@@ -45,6 +65,10 @@ export async function POST(req: NextRequest) {
       quantidadeMinima: Number(quantidadeMinima) || 0,
       categoriaId: categoriaId || null,
       localizacaoId: localizacaoId || null,
+      status: status || "ATIVO",
+      numeroSerie: numeroSerie || null,
+      valorAquisicao: valorAquisicao ? Number(valorAquisicao) : null,
+      dataAquisicao: dataAquisicao ? new Date(dataAquisicao) : null,
       origem: origem || null,
       nomeDoador: origem === "DOACAO" ? (nomeDoador || null) : null,
       valorCompra: origem === "COMPRA" && valorCompra ? Number(valorCompra) : null,
