@@ -7,42 +7,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Setup (first time)
 npm install
-cp .env.example .env          # já configurado para SQLite
 
 # Database
-npm run db:migrate            # cria o arquivo dev.db com as tabelas
+npm run db:migrate            # cria o arquivo prisma/dev.db com as tabelas
 npm run db:seed               # popula usuário admin e dados iniciais
 npm run db:studio             # abre o Prisma Studio (editor visual)
 
 # Development
 npm run dev                   # inicia em http://localhost:3000
 
-# Build
-npm run build && npm start
+# Build & production
+npm run build
+npm start -- -p 3001          # porta 3001 para evitar conflito com dev
 ```
 
 Default login after seed: `admin@igreja.com` / `admin123`
 
-**Banco de dados:** SQLite — arquivo gerado em `prisma/dev.db` (criado automaticamente pelo migrate).
-
 ## Architecture
 
-Full-stack Next.js 14 App Router. No separate backend process — API routes in `src/app/api/` serve as the backend.
+Full-stack Next.js 14 App Router. No separate backend — API routes in `src/app/api/` serve as the backend.
 
-**Auth flow:** NextAuth v4 with JWT strategy. `authOptions` is the single source of truth in `src/lib/auth.ts`. All API routes call `getServerSession(authOptions)`. Middleware (`middleware.ts` at root) uses `withAuth` from `next-auth/middleware` to protect all routes except `/login` and `/api/auth`.
+**Auth flow:** NextAuth v4 with JWT strategy. `authOptions` defined in `src/lib/auth.ts`. All API routes authenticate via `getToken()` from `next-auth/jwt` (not `getServerSession` — that doesn't work in App Router route handlers). The helper is in `src/lib/session.ts`. Middleware (`middleware.ts` at root) uses `withAuth` from `next-auth/middleware` to protect all routes except `/login` and `/api/auth`.
 
 **Route groups:**
-- `src/app/(protected)/` — all authenticated pages (dashboard, itens, estoque, patrimônio, localizações, doações, histórico) share a layout with the sidebar
+- `src/app/(protected)/` — all authenticated pages share a layout with the sidebar
 - `src/app/login/` — public login page
 
-**Database:** Prisma + PostgreSQL. Schema in `prisma/schema.prisma`. All tables use `@@map()` for snake_case PostgreSQL names. Prisma `Decimal` fields must be converted to `Number` before returning JSON from API routes.
+**Database:** Prisma + SQLite. Schema in `prisma/schema.prisma`. The db file (`prisma/dev.db`) is gitignored. No enums (SQLite doesn't support them — use `String` fields with string literal values). No `@db.Decimal` annotations (use `Float`). Prisma `Float` values are safe to return directly as JSON.
 
 **Stock updates are atomic:** `POST /api/movimentacoes` uses `prisma.$transaction` to create the movement record and update `Item.quantidade` in a single transaction. Never update item quantity outside this transaction.
+
+**Client-side fetching:** All pages use `fetchJson<T>(url, fallback)` from `src/lib/utils.ts` to load data — never raw `fetch()` without checking `res.ok`. All `handleSubmit` functions check `res.ok` and show an `alert()` on failure.
 
 **Key files:**
 - `src/lib/auth.ts` — NextAuth config (authOptions)
 - `src/lib/prisma.ts` — Prisma singleton (prevents connection leaks in dev)
-- `src/lib/session.ts` — `getSession()` and `getUserId()` helpers for server-side use
+- `src/lib/session.ts` — `getAuthToken()` and `getUserId()` helpers using `getToken()` from next-auth/jwt
+- `src/lib/utils.ts` — `fetchJson<T>()`, `formatDate()`, `formatCurrency()`
 - `src/types/index.ts` — TypeScript types + NextAuth session augmentation
 
 ## Pages → API mapping
@@ -55,4 +56,4 @@ Full-stack Next.js 14 App Router. No separate backend process — API routes in 
 | `/patrimonio` | `GET/POST /api/patrimonio`, `PUT/DELETE /api/patrimonio/[id]`, `GET /api/localizacoes` |
 | `/localizacoes` | `GET/POST /api/localizacoes`, `PUT/DELETE /api/localizacoes/[id]` |
 | `/doacoes` | `GET/POST /api/doacoes`, `PUT/DELETE /api/doacoes/[id]` |
-| `/historico` | `GET /api/movimentacoes` (with query params: busca, tipo, dataInicio, dataFim) |
+| `/historico` | `GET /api/movimentacoes` (query params: busca, tipo, dataInicio, dataFim) |
